@@ -1,3 +1,4 @@
 timestamp_utc,timestamp_jst,sr1_freq,sr1_amp,sr1_peak,sr1_power,sr1_trend,sr2_freq,sr2_amp,sr2_peak,sr2_power,sr2_trend,sr3_freq,sr3_amp,sr3_peak,sr3_power,sr3_trend,sr4_freq,sr4_amp,sr4_peak,sr4_power,sr4_trend,sr5_freq,sr5_amp,sr5_peak,sr5_power,sr5_trend,signal_strength,snr,noise_level,quality_score,stability,main_frequency,total_power,average_amplitude
 2026-03-11 09:32:43,2026-03-11 18:32:43,7.65,14.84,7.59,87,down,14.04,13.13,14.03,80,down,21.14,16.76,21.03,70,up,26.76,11.31,27.63,53,down,33.3,22.45,33.42,48,down,90.7,9.86,9.2,80.5,60,7.65,338,15.7
 2026-03-11 11:22:30,2026-03-11 20:22:30,7.65,5.17,7.59,88,down,13.93,10.89,14.57,75,down,21.3,9.84,20.57,65,up,27.08,20.7,27.27,55,down,33.11,13.55,33.67,42,down,75.3,11.24,6.7,76.2,60,7.65,325,12.03
+2026-03-11 14:30:20,2026-03-11 23:30:20,8.02,5.14,8.08,85,up,14.61,15.19,14.26,71,up,20.75,11.3,20.63,65,down,27.76,12.12,26.92,51,up,33.35,22.95,34.18,44,down,75.2,19.79,3.8,77.1,60,8.02,316,13.34
