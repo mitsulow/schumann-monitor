@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schumann Resonance — データ蓄積・検証</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&family=Zen+Kaku+Gothic+New:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06060c;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.06);
+  --text: #e8e4ec;
+  --text2: rgba(255,255,255,0.6);
+  --text3: rgba(255,255,255,0.3);
+  --accent: #b8c4e8;
+  --f1: #e8e4ec;
+  --f2: #d4c85a;
+  --f3: #c85a5a;
+  --f4: #5ac878;
+  --f5: #a87cd8;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+/* Header */
+header {
+  text-align: center;
+  padding: 32px 0 24px;
+}
+header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(24px, 4vw, 38px);
+  letter-spacing: 2px;
+}
+header h1 em { font-style: italic; color: var(--accent); }
+header .sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 3px;
+  margin-top: 8px;
+}
+header .desc {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 12px;
+  line-height: 1.8;
+}
+
+/* Status */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #5ac878;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Latest values */
+.latest-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .latest-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.mode-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.mode-card .label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.mode-card .hz {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+}
+.mode-card .detail {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* Chart section */
+.chart-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chart-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.range-btns {
+  display: flex;
+  gap: 4px;
+}
+.range-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.range-btn:hover, .range-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+.chart-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mode toggle */
+.mode-toggles {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.mode-toggle {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 5px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-toggle.active { border-width: 2px; }
+
+/* Quality section */
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.q-card .q-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.q-card .q-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  color: var(--text);
+}
+
+/* Data table */
+.data-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+.data-table-wrap h3 {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+td {
+  padding: 5px 8px;
+  color: var(--text2);
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  white-space: nowrap;
+}
+tr:hover td { color: var(--text); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  line-height: 2;
+}
+.footer a { color: var(--text3); }
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text3);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Schumann <em>Resonance</em></h1>
+  <div class="sub">DATA ACCUMULATION &amp; VERIFICATION</div>
+  <div class="desc">
+    SchumannResonanceLive.com API からの数値データを15分間隔で蓄積中。<br>
+    トムスク・HeartMathの公開グラフとの目視比較用。
+  </div>
+</header>
+
+<div class="status-bar">
+  <div class="status-dot"></div>
+  <span id="statusText">データ読み込み中...</span>
+</div>
+
+<!-- Latest values -->
+<div class="latest-grid" id="latestGrid"></div>
+
+<!-- Quality indicators -->
+<div class="quality-grid" id="qualityGrid"></div>
+
+<!-- Mode toggles -->
+<div class="mode-toggles" id="modeToggles"></div>
+
+<!-- Frequency chart -->
+<div class="chart-section">
+  <div class="chart-header">
+    <div class="chart-title">周波数推移 (Hz)</div>
+    <div class="range-btns" id="rangeBtns"></div>
+  </div>
+  <div class="chart-canvas-wrap">
+    <canvas id="freqChart"></canvas>
+  </div>
+</div>
+
+<!-- Amplitude chart -->
+<div class="chart-section">
+  <div class="chart-header">
+    <div class="chart-title">振幅推移</div>
+  </div>
+  <div class="chart-canvas-wrap">
+    <canvas id="ampChart"></canvas>
+  </div>
+</div>
+
+<!-- Raw data table -->
+<div class="data-table-wrap">
+  <h3>直近データ（新しい順）</h3>
+  <div id="dataTable"></div>
+</div>
+
+<div class="footer">
+  Source: SchumannResonanceLive.com API (CC BY 4.0)<br>
+  Station: Space Observing System, Tomsk, Russia<br>
+  15分間隔で自動取得 — GitHub Actions<br>
+  <a href="https://github.com/mitsulow/schumann-monitor">GitHub Repository</a>
+</div>
+
+</div>
+
+<script>
+const COLORS = {sr1:'#e8e4ec',sr2:'#d4c85a',sr3:'#c85a5a',sr4:'#5ac878',sr5:'#a87cd8'};
+const NAMES = {sr1:'SR1',sr2:'SR2',sr3:'SR3',sr4:'SR4',sr5:'SR5'};
+const BASEHZ = {sr1:'7.83',sr2:'14.1',sr3:'20.3',sr4:'26.4',sr5:'33.8'};
+
+let allData = [];
+let showModes = {sr1:true, sr2:true, sr3:true, sr4:true, sr5:true};
+let currentRange = '1d'; // 1h, 6h, 1d, 3d, 7d
+
+const RANGES = {
+  '1h': {label:'1時間', ms:3600000},
+  '6h': {label:'6時間', ms:21600000},
+  '1d': {label:'1日', ms:86400000},
+  '3d': {label:'3日', ms:259200000},
+  '7d': {label:'7日', ms:604800000},
+  'all': {label:'全期間', ms:Infinity}
+};
+
+async function loadCSV() {
+  try {
+    const resp = await fetch('data/schumann_log.csv?t=' + Date.now());
+    if (!resp.ok) throw new Error('CSV not found');
+    const text = await resp.text();
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) throw new Error('No data yet');
+
+    const headers = lines[0].split(',');
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const vals = lines[i].split(',');
+      const row = {};
+      headers.forEach((h, j) => row[h.trim()] = vals[j]?.trim() || '');
+      row._time = new Date(row.timestamp_utc + 'Z');
+      data.push(row);
+    }
+    return data.sort((a, b) => a._time - b._time);
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
+function renderStatus(data) {
+  const el = document.getElementById('statusText');
+  if (data.length === 0) {
+    el.textContent = 'データなし — 蓄積開始を待っています';
+    return;
+  }
+  const last = data[data.length - 1];
+  const ago = Math.round((Date.now() - last._time) / 60000);
+  el.textContent = `${data.length}件蓄積中 — 最終取得: ${last.timestamp_jst} JST (${ago}分前)`;
+}
+
+function renderLatest(data) {
+  const grid = document.getElementById('latestGrid');
+  if (data.length === 0) { grid.innerHTML = '<div class="loading">データ待ち</div>'; return; }
+  const last = data[data.length - 1];
+  grid.innerHTML = ['sr1','sr2','sr3','sr4','sr5'].map(id => {
+    const freq = last[id+'_freq'] || '—';
+    const amp = last[id+'_amp'] || '—';
+    const peak = last[id+'_peak'] || '—';
+    const power = last[id+'_power'] || '—';
+    return `<div class="mode-card">
+      <div class="label" style="color:${COLORS[id]}">${NAMES[id]}</div>
+      <div class="hz" style="color:${COLORS[id]}">${freq}<span style="font-size:14px">Hz</span></div>
+      <div class="detail">amp ${amp} · peak ${peak}</div>
+      <div class="detail">power ${power}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuality(data) {
+  const grid = document.getElementById('qualityGrid');
+  if (data.length === 0) return;
+  const last = data[data.length - 1];
+  const items = [
+    {label:'SIGNAL', value:last.signal_strength || '—'},
+    {label:'SNR', value:last.snr ? last.snr + ' dB' : '—'},
+    {label:'NOISE', value:last.noise_level || '—'},
+    {label:'QUALITY', value:last.quality_score || '—'},
+    {label:'STABILITY', value:last.stability || '—'},
+  ];
+  grid.innerHTML = items.map(it =>
+    `<div class="q-card"><div class="q-label">${it.label}</div><div class="q-value">${it.value}</div></div>`
+  ).join('');
+}
+
+function renderToggles() {
+  const wrap = document.getElementById('modeToggles');
+  wrap.innerHTML = ['sr1','sr2','sr3','sr4','sr5'].map(id => {
+    const active = showModes[id] ? 'active' : '';
+    return `<button class="mode-toggle ${active}" style="color:${COLORS[id]};border-color:${showModes[id]?COLORS[id]:'var(--border)'}" onclick="toggleMode('${id}',this)">${NAMES[id]} (${BASEHZ[id]}Hz)</button>`;
+  }).join('');
+}
+
+function toggleMode(id, btn) {
+  showModes[id] = !showModes[id];
+  renderToggles();
+  drawCharts();
+}
+
+function renderRangeBtns() {
+  const wrap = document.getElementById('rangeBtns');
+  wrap.innerHTML = Object.entries(RANGES).map(([key, val]) =>
+    `<button class="range-btn ${key===currentRange?'active':''}" onclick="setRange('${key}')">${val.label}</button>`
+  ).join('');
+}
+
+function setRange(r) {
+  currentRange = r;
+  renderRangeBtns();
+  drawCharts();
+}
+
+function getFilteredData() {
+  if (allData.length === 0) return [];
+  const range = RANGES[currentRange];
+  if (range.ms === Infinity) return allData;
+  const cutoff = Date.now() - range.ms;
+  return allData.filter(d => d._time.getTime() > cutoff);
+}
+
+function drawChart(canvasId, field, yLabel) {
+  const canvas = document.getElementById(canvasId);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.parentElement.clientWidth;
+  const cssH = canvas.parentElement.clientHeight;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  const cx = canvas.getContext('2d');
+  cx.scale(dpr, dpr);
+
+  const W = cssW, H = cssH;
+  const mL = 52, mR = 60, mT = 16, mB = 40;
+  const pW = W - mL - mR, pH = H - mT - mB;
+
+  // Background
+  cx.fillStyle = '#08080f';
+  cx.fillRect(0, 0, W, H);
+
+  const data = getFilteredData();
+  if (data.length < 2) {
+    cx.fillStyle = 'rgba(255,255,255,0.2)';
+    cx.font = '12px "DM Mono", monospace';
+    cx.textAlign = 'center';
+    cx.fillText('データ蓄積中... (最低2ポイント必要)', W/2, H/2);
+    return;
+  }
+
+  // Collect all visible values for Y range
+  let allVals = [];
+  const modes = ['sr1','sr2','sr3','sr4','sr5'].filter(id => showModes[id]);
+  modes.forEach(id => {
+    data.forEach(d => {
+      const v = parseFloat(d[id + '_' + field]);
+      if (!isNaN(v)) allVals.push(v);
+    });
+  });
+  if (allVals.length === 0) return;
+
+  const yMin = Math.floor(Math.min(...allVals) * 2) / 2 - 0.5;
+  const yMax = Math.ceil(Math.max(...allVals) * 2) / 2 + 0.5;
+  const tMin = data[0]._time.getTime();
+  const tMax = data[data.length-1]._time.getTime();
+  const tSpan = tMax - tMin || 1;
+
+  const xOf = t => mL + ((t - tMin) / tSpan) * pW;
+  const yOf = v => mT + (1 - (v - yMin) / (yMax - yMin)) * pH;
+
+  // Grid
+  cx.strokeStyle = 'rgba(255,255,255,0.05)';
+  cx.lineWidth = 1;
+  const yStep = (yMax - yMin) > 20 ? 5 : (yMax - yMin) > 8 ? 2 : 0.5;
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+    const py = yOf(y);
+    cx.beginPath(); cx.moveTo(mL, py); cx.lineTo(W - mR, py); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,0.25)';
+    cx.font = '10px "DM Mono", monospace';
+    cx.textAlign = 'right';
+    cx.fillText(y.toFixed(1), mL - 6, py + 3);
+  }
+
+  // Time labels
+  cx.textAlign = 'center';
+  cx.fillStyle = 'rgba(255,255,255,0.2)';
+  const numLabels = Math.min(8, data.length);
+  for (let i = 0; i < numLabels; i++) {
+    const idx = Math.floor(i * (data.length - 1) / (numLabels - 1));
+    const d = data[idx];
+    const x = xOf(d._time.getTime());
+    const label = d.timestamp_jst.slice(11, 16); // HH:MM
+    cx.fillText(label, x, H - mB + 16);
+    // Date label for multi-day
+    if (currentRange === '3d' || currentRange === '7d' || currentRange === 'all') {
+      cx.fillText(d.timestamp_jst.slice(5, 10), x, H - mB + 28);
+    }
+  }
+
+  // Draw lines
+  modes.forEach(id => {
+    const pts = data.map(d => ({
+      x: xOf(d._time.getTime()),
+      y: yOf(parseFloat(d[id + '_' + field]))
+    })).filter(p => !isNaN(p.y));
+    if (pts.length < 2) return;
+
+    cx.strokeStyle = COLORS[id];
+    cx.lineWidth = 1.5;
+    cx.beginPath();
+    cx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      cx.lineTo(pts[i].x, pts[i].y);
+    }
+    cx.stroke();
+
+    // Last value label
+    const last = pts[pts.length - 1];
+    cx.fillStyle = COLORS[id];
+    cx.font = '10px "DM Mono", monospace';
+    cx.textAlign = 'left';
+    const lastVal = parseFloat(data[data.length-1][id + '_' + field]);
+    if (!isNaN(lastVal)) {
+      cx.fillText(NAMES[id] + ' ' + lastVal.toFixed(2), last.x + 6, last.y + 3);
+    }
+
+    // Dot at last point
+    cx.beginPath();
+    cx.arc(last.x, last.y, 3, 0, Math.PI * 2);
+    cx.fillStyle = COLORS[id];
+    cx.fill();
+  });
+}
+
+function drawCharts() {
+  drawChart('freqChart', 'freq', 'Hz');
+  drawChart('ampChart', 'amp', 'Amplitude');
+}
+
+function renderTable(data) {
+  const wrap = document.getElementById('dataTable');
+  if (data.length === 0) {
+    wrap.innerHTML = '<div class="loading">データなし</div>';
+    return;
+  }
+  const recent = data.slice(-50).reverse();
+  let html = '<table><thead><tr>';
+  html += '<th>時刻(JST)</th><th>SR1</th><th>SR2</th><th>SR3</th><th>SR4</th><th>SR5</th>';
+  html += '<th>Signal</th><th>SNR</th><th>Quality</th>';
+  html += '</tr></thead><tbody>';
+  recent.forEach(d => {
+    html += '<tr>';
+    html += `<td>${d.timestamp_jst.slice(5,16)}</td>`;
+    ['sr1','sr2','sr3','sr4','sr5'].forEach(id => {
+      html += `<td style="color:${COLORS[id]}">${d[id+'_freq'] || '—'}</td>`;
+    });
+    html += `<td>${d.signal_strength || '—'}</td>`;
+    html += `<td>${d.snr || '—'}</td>`;
+    html += `<td>${d.quality_score || '—'}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+async function init() {
+  allData = await loadCSV();
+  renderStatus(allData);
+  renderLatest(allData);
+  renderQuality(allData);
+  renderToggles();
+  renderRangeBtns();
+  drawCharts();
+  renderTable(allData);
+}
+
+init();
+window.addEventListener('resize', drawCharts);
+
+// 5分ごとに自動リロード
+setInterval(() => location.reload(), 300000);
+</script>
+</body>
+</html>
